@@ -1,28 +1,42 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import { legalUrls } from "@/lib/legal";
 
 const ACK_KEY = "tindahan-cookie-notice-v1";
+const NOTICE_EVENT = "tindahan-cookie-notice-change";
+
+function subscribe(callback: () => void) {
+  window.addEventListener("storage", callback);
+  window.addEventListener(NOTICE_EVENT, callback);
+  return () => {
+    window.removeEventListener("storage", callback);
+    window.removeEventListener(NOTICE_EVENT, callback);
+  };
+}
+
+function getSnapshot() {
+  try {
+    return window.localStorage.getItem(ACK_KEY) !== "acknowledged";
+  } catch {
+    return true;
+  }
+}
+
+function getServerSnapshot() {
+  return false;
+}
 
 export function LegalNotice() {
-  const [visible, setVisible] = useState(false);
-
-  useEffect(() => {
-    try {
-      setVisible(window.localStorage.getItem(ACK_KEY) !== "acknowledged");
-    } catch {
-      setVisible(true);
-    }
-  }, []);
+  const visible = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
   function acknowledge() {
     try {
       window.localStorage.setItem(ACK_KEY, "acknowledged");
     } catch {
-      // Still allow dismissal for the current page view.
+      // Storage may be blocked; the notice will return on the next navigation.
     }
-    setVisible(false);
+    window.dispatchEvent(new Event(NOTICE_EVENT));
   }
 
   if (!visible) return null;

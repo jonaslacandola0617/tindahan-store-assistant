@@ -1,6 +1,7 @@
 /* eslint-disable @next/next/no-page-custom-font -- the prototype's exact Google Fonts request is the visual contract. */
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
+import { LegalNotice } from "@/components/legal-notice";
 import { ThemeRuntime } from "@/components/theme-runtime";
 import type { ThemePreference } from "@/components/theme-preference";
 import "./globals.css";
@@ -26,7 +27,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet" />
       </head>
-      <body><ThemeRuntime preference={themePreference}/>{children}</body>
+      <body><ThemeRuntime preference={themePreference}/>{children}<LegalNotice /></body>
     </html>
   );
 }

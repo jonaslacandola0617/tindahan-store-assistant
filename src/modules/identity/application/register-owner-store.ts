@@ -1,11 +1,12 @@
+import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import { database } from "@/platform/persistence/prisma";
 import { storeInput } from "@/modules/stores/domain/store";
 import { hashPassword } from "../domain/password";
-import { registrationInput } from "../domain/registration";
+import { legalAcceptanceInput, registrationInput } from "../domain/registration";
 
 export const ownerStoreRegistrationInput = z.object({
-  account: registrationInput,
+  account: registrationInput.extend({ legalAcceptance: legalAcceptanceInput }),
   store: storeInput,
 });
 
@@ -40,6 +41,23 @@ export async function registerOwnerStore(input: unknown) {
       },
       select: { id: true, name: true },
     });
+
+    await transaction.auditEvent.create({
+      data: {
+        storeId: store.id,
+        actorId: user.id,
+        action: "LEGAL_TERMS_ACCEPTED",
+        entityType: "User",
+        entityId: user.id,
+        correlationId: randomUUID(),
+        after: {
+          acceptedAt: new Date().toISOString(),
+          termsVersion: value.account.legalAcceptance.termsVersion,
+          privacyNoticeVersion: value.account.legalAcceptance.privacyVersion,
+        },
+      },
+    });
+
     return { user, store };
   }, { maxWait: 10_000, timeout: 30_000 });
 }

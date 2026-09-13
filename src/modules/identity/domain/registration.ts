@@ -1,4 +1,11 @@
 import { z } from "zod";
+import { PRIVACY_NOTICE_VERSION, TERMS_VERSION } from "@/lib/legal";
+
+export const legalAcceptanceInput = z.object({
+  accepted: z.literal(true),
+  termsVersion: z.literal(TERMS_VERSION),
+  privacyVersion: z.literal(PRIVACY_NOTICE_VERSION),
+});
 
 export const setupCredentialsInput = z.object({
   email: z.string().trim().toLowerCase().email(),
@@ -15,4 +22,5 @@ export const accountSetupInput = setupCredentialsInput.extend({
 
 export const registrationInput = setupCredentialsInput.extend({
   name: z.string().trim().min(2).max(80),
+  legalAcceptance: legalAcceptanceInput.optional(),
 });
